@@ -39,6 +39,8 @@ class IndexBuilder {
   - threadPool: ThreadPool
   + build(documents: List<Document>): void
   + setThreadCount(count: int): void
+  + getLastBuildTime(): long
+  + getThreadCount(): int
 }
 
 class SearchService {
@@ -56,6 +58,7 @@ class OllamaClient {
 class SearchController {
   - searchService: SearchService
   - indexBuilder: IndexBuilder
+  - statisticsService: StatisticsService
   + health(): JSON
   + buildIndex(threads: int): JSON
   + search(query: String): JSON
@@ -74,14 +77,28 @@ class SearchResult {
   - snippet: String
 }
 
+class StatisticsService {
+  - index: InvertedIndex
+  - indexBuilder: IndexBuilder
+  + collectStatistics(): JSON
+}
+
 InvertedIndex *-- Bucket
+
 IndexBuilder --> InvertedIndex
 IndexBuilder --> ThreadPool
 IndexBuilder --> Document
+
 SearchService --> InvertedIndex
 SearchService --> OllamaClient
 SearchService --> SearchResult
+
 SearchController --> SearchService
 SearchController --> IndexBuilder
+SearchController --> StatisticsService
+
 WebSocketHandler --> SearchService
+
+StatisticsService --> InvertedIndex
+StatisticsService --> IndexBuilder
 @enduml
