@@ -1,0 +1,41 @@
+
+@startuml
+!theme mars
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+title Use Case Diagram - Parallel Search System
+
+actor "Administrator" as Admin
+actor "User" as User
+actor "Ollama LLM" as LLM
+
+rectangle "Parallel Search System" {
+
+  usecase "Build inverted index" as UC1
+  usecase "Configure thread count" as UC2
+  usecase "View system statistics" as UC3
+
+  usecase "Search documents" as UC4
+  usecase "Expand query" as UC5
+  usecase "Keyword search" as UC6
+  usecase "View search results" as UC7
+  usecase "Track search progress" as UC8
+
+}
+
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+
+User --> UC4
+User --> UC7
+User --> UC8
+
+UC4 ..> UC5 : <<include>>
+UC4 ..> UC6 : <<include>>
+
+LLM --> UC5
+
+@enduml
