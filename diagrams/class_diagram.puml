@@ -1,0 +1,87 @@
+@startuml
+title Class Diagram - Parallel Search System
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+left to right direction
+
+class Document {
+  - id: String
+  - content: String
+  - path: String
+  + getId(): String
+  + getContent(): String
+}
+
+class InvertedIndex {
+  - buckets: Bucket[]
+  - locks: Lock[]
+  + addTerm(term: String, docId: String): void
+  + search(term: String): Set<String>
+  + getDocumentCount(): int
+}
+
+class Bucket {
+  - entries: Entry[]
+  + insert(term: String, docId: String): void
+  + find(term: String): Set<String>
+}
+
+class ThreadPool {
+  - workers: Worker[]
+  - taskQueue: TaskQueue
+  + submit(task: Task): void
+  + shutdown(): void
+}
+
+class IndexBuilder {
+  - index: InvertedIndex
+  - threadPool: ThreadPool
+  + build(documents: List<Document>): void
+  + setThreadCount(count: int): void
+}
+
+class SearchService {
+  - index: InvertedIndex
+  - ollamaClient: OllamaClient
+  + search(query: String): SearchResult[]
+}
+
+class OllamaClient {
+  - baseUrl: String
+  + expandQuery(query: String): String[]
+  + isAvailable(): boolean
+}
+
+class SearchController {
+  - searchService: SearchService
+  - indexBuilder: IndexBuilder
+  + health(): JSON
+  + buildIndex(threads: int): JSON
+  + search(query: String): JSON
+  + stats(): JSON
+}
+
+class WebSocketHandler {
+  - searchService: SearchService
+  + handleSearch(query: String): void
+  + sendStage(stage: String, data: JSON): void
+}
+
+class SearchResult {
+  - documentId: String
+  - score: double
+  - snippet: String
+}
+
+InvertedIndex *-- Bucket
+IndexBuilder --> InvertedIndex
+IndexBuilder --> ThreadPool
+IndexBuilder --> Document
+SearchService --> InvertedIndex
+SearchService --> OllamaClient
+SearchService --> SearchResult
+SearchController --> SearchService
+SearchController --> IndexBuilder
+WebSocketHandler --> SearchService
+@enduml
