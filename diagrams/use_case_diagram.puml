@@ -1,11 +1,9 @@
-
 @startuml
-!theme mars
+title Use Case Diagram - Parallel Search System
+
 left to right direction
 skinparam packageStyle rectangle
 skinparam shadowing false
-
-title Use Case Diagram - Parallel Search System
 
 actor "Administrator" as Admin
 actor "User" as User
@@ -16,26 +14,38 @@ rectangle "Parallel Search System" {
   usecase "Build inverted index" as UC1
   usecase "Configure thread count" as UC2
   usecase "View system statistics" as UC3
+  usecase "Check server health" as UC4
 
-  usecase "Search documents" as UC4
-  usecase "Expand query" as UC5
-  usecase "Keyword search" as UC6
-  usecase "View search results" as UC7
-  usecase "Track search progress" as UC8
+  usecase "Search documents" as UC5
+  usecase "Expand query with LLM" as UC6
+  usecase "Keyword search" as UC7
+  usecase "View search results" as UC8
+  usecase "Track search progress" as UC9
 
 }
 
-Admin --> UC1
-Admin --> UC2
-Admin --> UC3
+Admin -- UC1
+Admin -- UC2
+Admin -- UC3
+Admin -- UC4
 
-User --> UC4
-User --> UC7
-User --> UC8
+User -- UC5
+User -- UC8
+User -- UC9
 
-UC4 ..> UC5 : <<include>>
-UC4 ..> UC6 : <<include>>
+UC1 ..> UC2 : <<include>>
+UC5 ..> UC6 : <<include>>
+UC5 ..> UC7 : <<include>>
+UC5 ..> UC8 : <<include>>
 
-LLM --> UC5
+UC9 ..> UC5 : <<extend>>
 
+LLM -- UC6
+
+note bottom of UC5
+Search is available
+through Web UI and CLI.
+Multiple clients can
+search concurrently.
+end note
 @enduml
