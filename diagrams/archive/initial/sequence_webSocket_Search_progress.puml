@@ -1,0 +1,51 @@
+@startuml
+title Sequence Diagram - WebSocket Search Progress
+
+autonumber
+skinparam shadowing false
+
+actor User
+participant "Web UI" as UI
+participant "WebSocketHandler" as WS
+participant "SearchService" as Search
+participant "OllamaClient" as Ollama
+participant "InvertedIndex" as Index
+
+User -> UI: Enter search query
+UI -> WS: Connect /ws/search
+activate WS
+
+UI -> WS: Send {"query": "search text"}
+
+WS -> Search: Start search(query)
+activate Search
+
+Search -> Ollama: expandQuery(query)
+activate Ollama
+
+Ollama --> Search: Expanded terms
+deactivate Ollama
+
+Search -> WS: Query expansion completed
+WS --> UI: stage: query_expansion
+
+loop For each expanded keyword
+    Search -> Index: search(term)
+    activate Index
+    Index --> Search: Matching documents
+    deactivate Index
+end
+
+Search -> Search: Merge and rank results
+
+Search -> WS: Search results
+WS --> UI: stage: keyword_search
+
+Search --> WS: Search completed
+deactivate Search
+
+WS --> UI: stage: done
+deactivate WS
+
+UI --> User: Display results
+@enduml

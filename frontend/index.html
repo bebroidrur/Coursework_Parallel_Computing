@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Parallel Search System demonstration interface">
+  <title>Parallel Search System</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">∥</span><div><strong>Parallel Search</strong><small>Coursework system</small></div></div>
+      <nav class="nav" aria-label="Основна навігація">
+        <button class="nav-link active" data-view="overview"><span>⌂</span>Огляд</button>
+        <button class="nav-link" data-view="search"><span>⌕</span>Пошук</button>
+        <button class="nav-link" data-view="index"><span>▦</span>Індексація</button>
+        <button class="nav-link" data-view="stats"><span>◒</span>Статистика</button>
+      </nav>
+      <div class="sidebar-foot"><span class="pulse"></span><span id="connection-label">Перевірка backend…</span></div>
+    </aside>
+    <main class="main-content">
+      <header class="topbar"><div><p class="eyebrow">PARALLEL COMPUTING · LLM SEARCH</p><h1 id="page-title">Система пошуку документів</h1></div><div class="top-actions"><span class="server-url" id="server-url"></span><button class="icon-button" id="refresh-health" title="Оновити стан">↻</button></div></header>
+      <div id="toast-region" aria-live="polite"></div>
+
+      <section class="view active" id="view-overview">
+        <div class="hero"><div><p class="eyebrow accent">SEARCH / INDEX / OBSERVE</p><h2>Пошук, який видно<br><em>у кожному етапі.</em></h2><p class="hero-copy">Демонстрація власного інвертованого індексу, паралельної побудови та query expansion через локальну LLM.</p><div class="hero-actions"><button class="primary" data-navigate="search">Відкрити пошук <span>→</span></button><button class="secondary" data-navigate="index">Побудувати індекс</button></div></div><div class="hero-visual"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="core"><span>∥</span><small>INDEX<br>ENGINE</small></div><span class="node node-a">01</span><span class="node node-b">LLM</span><span class="node node-c">N×</span></div></div>
+        <div class="section-heading"><div><p class="eyebrow">SYSTEM STATUS</p><h3>Сервіси доступні для демонстрації</h3></div><button class="text-button" id="overview-refresh">Оновити ↻</button></div>
+        <div class="status-grid"><article class="status-card"><div class="status-icon backend-icon">⌘</div><div><span class="card-label">Backend API</span><strong id="backend-status">Перевіряється…</strong><small id="backend-status-detail">REST та WebSocket</small></div><i class="status-dot pending" id="backend-dot"></i></article><article class="status-card"><div class="status-icon ollama-icon">✦</div><div><span class="card-label">Ollama / LLM</span><strong id="ollama-status">Перевіряється…</strong><small>query expansion · llama3.2:1b</small></div><i class="status-dot pending" id="ollama-dot"></i></article><article class="status-card stat-link" data-navigate="stats"><div class="status-icon index-icon">▤</div><div><span class="card-label">Поточний індекс</span><strong id="overview-documents">— документів</strong><small id="overview-terms">Статистика ще не завантажена</small></div><span class="card-arrow">→</span></article></div>
+      </section>
+
+      <section class="view" id="view-search"><div class="section-heading page-heading"><div><p class="eyebrow accent">DOCUMENT SEARCH</p><h2>Знайти у власному індексі</h2><p>Keyword для точного пошуку або LLM для розширення запиту.</p></div></div>
+        <div class="search-layout"><div class="panel search-panel"><form id="search-form"><label for="search-query">Пошуковий запит</label><div class="search-input-wrap"><span>⌕</span><input id="search-query" maxlength="4096" placeholder="Наприклад: parallel computing" autocomplete="off" required><button type="submit" id="search-submit">Шукати <span>→</span></button></div><div class="form-row"><div><span class="field-label">Режим</span><div class="mode-switch"><label><input type="radio" name="mode" value="keyword" checked><span>Keyword</span></label><label><input type="radio" name="mode" value="llm"><span>LLM expand</span></label></div></div><label class="live-toggle"><input type="checkbox" id="live-search" checked><span class="toggle"></span>Показувати етапи WebSocket</label></div></form><div class="query-meta" id="query-meta" hidden><span>Початковий запит</span><strong id="original-query"></strong><span class="meta-divider">→</span><span>Терміни Ollama</span><div id="expanded-terms" class="term-list"></div></div></div><div class="panel progress-panel"><div class="panel-title"><span>ПРОЦЕС ПОШУКУ</span><span class="live-badge" id="search-state">IDLE</span></div><div class="timeline" id="search-timeline"><div class="timeline-empty">Запустіть пошук, щоб побачити етапи в реальному часі.</div></div></div></div>
+        <div class="results-head"><div><p class="eyebrow">RESULTS</p><h3 id="results-title">Результати пошуку</h3></div><span class="result-count" id="result-count"></span></div><div class="results-grid" id="results-grid"><div class="empty-state"><span>⌕</span><h3>Поки немає результатів</h3><p>Введіть запит вище та запустіть пошук.</p></div></div>
+      </section>
+
+      <section class="view" id="view-index"><div class="section-heading page-heading"><div><p class="eyebrow accent">INDEX BUILDER</p><h2>Побудова індексу</h2><p>Розподіліть документи між потоками та виміряйте результат.</p></div></div><div class="index-layout"><div class="panel index-form-panel"><form id="index-form"><label for="threads">Кількість потоків</label><div class="number-control"><button type="button" data-step="-1">−</button><input id="threads" type="number" min="1" max="64" value="4"><button type="button" data-step="1">+</button></div><div class="quick-threads"><button type="button" data-threads="1">1</button><button type="button" data-threads="2">2</button><button type="button" data-threads="4" class="selected">4</button><button type="button" data-threads="8">8</button></div><p class="hint">Thread Pool · допустимо від 1 до 64</p><button class="primary full" id="index-submit" type="submit">Запустити індексацію <span>→</span></button></form></div><div class="panel index-result-panel"><div class="panel-title"><span>ОСТАННЯ ПОБУДОВА</span><span class="live-badge" id="index-state">READY</span></div><div id="index-result" class="index-result-empty">Результати з’являться після завершення побудови.</div></div></div></section>
+
+      <section class="view" id="view-stats"><div class="section-heading page-heading"><div><p class="eyebrow accent">OBSERVABILITY</p><h2>Статистика системи</h2><p>Поточний snapshot індексу та реальні benchmark-вимірювання.</p></div><button class="secondary" id="stats-refresh">Оновити статистику ↻</button></div><div class="metric-grid"><article class="metric-card"><span>Документи</span><strong id="stat-documents">—</strong><small>у поточному індексі</small></article><article class="metric-card"><span>Унікальні терміни</span><strong id="stat-terms">—</strong><small>у словнику індексу</small></article><article class="metric-card"><span>Час побудови</span><strong id="stat-time">—</strong><small>мілісекунди</small></article><article class="metric-card"><span>Потоки</span><strong id="stat-threads">—</strong><small>у попередній побудові</small></article></div><div class="panel benchmark-panel"><div class="panel-title"><div><span>BENCHMARK · 2026-11-13</span><small class="panel-subtitle">2000 документів · 150 токенів/document · Java 24 · 8 processors</small></div><span class="source-badge">REAL CSV DATA</span></div><div class="benchmark-chart" id="benchmark-chart"></div><div class="benchmark-table-wrap"><table><thead><tr><th>Режим</th><th>Потоки</th><th>Середній час</th><th>Відносно sequential</th></tr></thead><tbody id="benchmark-table"></tbody></table></div></div></section>
+    </main>
+  </div>
+  <script src="config.js"></script><script type="module" src="src/app.js"></script>
+</body>
+</html>

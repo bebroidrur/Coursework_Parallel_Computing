@@ -1,4 +1,5 @@
 @startuml
+caption Implemented backend, CLI and static Web UI; Docker Compose remains future work. See diagrams/README.md.
 title Deployment Diagram - Parallel Search System
 
 skinparam shadowing false
@@ -7,6 +8,11 @@ skinparam componentStyle rectangle
 node "Client Device" {
   artifact "Web Browser" as Browser
   artifact "CLI Application" as CLI
+}
+
+node "Static Frontend Server" {
+  component "frontend/index.html + app.js" as Frontend
+  artifact "runtime config.js" as FrontendConfig
 }
 
 node "Docker Host" {
@@ -32,6 +38,8 @@ node "Docker Host" {
 }
 
 Browser --> REST : HTTP / JSON
+Browser --> Frontend : HTTP static assets
+Frontend --> FrontendConfig
 CLI --> REST : HTTP / JSON
 Browser --> WS : WebSocket
 CLI --> WS : WebSocket

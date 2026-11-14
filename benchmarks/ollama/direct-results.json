@@ -1,0 +1,38 @@
+[
+  {
+    "run": "first",
+    "request": {
+      "model": "llama3.2:1b",
+      "prompt": "parallel computing",
+      "system": "Return JSON {\"terms\":[\"word\"]} with 3-5 related search keywords. No explanation.",
+      "stream": false,
+      "format": "json",
+      "keep_alive": "5m",
+      "options": {
+        "temperature": 0,
+        "num_predict": 48,
+        "num_ctx": 2048
+      }
+    },
+    "error": "timed out",
+    "wall_seconds": 45.08260349999182
+  },
+  {
+    "run": "warm",
+    "request": {
+      "model": "llama3.2:1b",
+      "prompt": "parallel computing",
+      "system": "Return JSON {\"terms\":[\"word\"]} with 3-5 related search keywords. No explanation.",
+      "stream": false,
+      "format": "json",
+      "keep_alive": "5m",
+      "options": {
+        "temperature": 0,
+        "num_predict": 48,
+        "num_ctx": 2048
+      }
+    },
+    "error": "timed out",
+    "wall_seconds": 45.107561624841765
+  }
+]

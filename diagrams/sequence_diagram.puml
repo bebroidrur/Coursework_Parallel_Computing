@@ -1,51 +1,35 @@
 @startuml
-title Sequence Diagram - Parallel Index Building
-
-autonumber
-
-actor Administrator
-participant "REST API" as API
-participant "IndexBuilder" as Builder
-participant "ThreadPool" as Pool
-participant "Worker Threads" as Workers
-participant "InvertedIndex" as Index
-
-Administrator -> API: POST /api/index {"threads": 4}
-activate API
-
-API -> Builder: buildIndex(4)
+title Parallel build: implemented Java API
+actor Caller
+participant IndexBuilder as Builder
+participant "ExecutorService (N threads)" as Pool
+participant "Worker tasks" as Workers
+participant "New InvertedIndex" as Index
+participant "Bucket monitor" as Bucket
+Caller -> Builder: buildParallel(documents, N)
 activate Builder
-
-Builder -> Pool: createPool(4)
-activate Pool
-
-Builder -> Builder: Load and split documents
-
-loop For each document batch
-    Builder -> Pool: submit(indexTask)
+Builder -> Builder: validate N, copy input, register unique document IDs
+Builder -> Pool: newFixedThreadPool(N)
+loop min(N, document count) tasks
+ Builder -> Pool: submit strided document partition
 end
-
-par Worker 1
-    Pool -> Workers: processBatch(1)
-    Workers -> Index: addTerm(term, docId)
-    Index --> Workers: success
-else Worker 2
-    Pool -> Workers: processBatch(2)
-    Workers -> Index: addTerm(term, docId)
-    Index --> Workers: success
-else Worker N
-    Pool -> Workers: processBatch(N)
-    Workers -> Index: addTerm(term, docId)
-    Index --> Workers: success
+par workers
+ Pool -> Workers: process documents
+ Workers -> Workers: check interruption; tokenize
+ loop terms
+  Workers -> Index: addRegisteredTerm(term, docId)
+  Index -> Bucket: synchronized insert
+ end
 end
-
-Pool --> Builder: All tasks completed
-deactivate Pool
-
-Builder -> Builder: Calculate build time
-Builder --> API: Indexing statistics
+Builder -> Pool: completion.take().get() for all tasks
+alt all workers successful
+ Builder -> Pool: shutdownNow(); close() waits for termination
+ Builder -> Builder: publish volatile BuildSnapshot(index, elapsed, N)
+ Builder --> Caller: complete
+else worker failure or caller interruption
+ Builder -> Pool: shutdownNow(); close() waits for termination
+ Builder -> Builder: retain previous snapshot; preserve interrupt flag
+ Builder --> Caller: IndexBuildException with cause
+end
 deactivate Builder
-
-API --> Administrator: JSON response
-deactivate API
 @enduml

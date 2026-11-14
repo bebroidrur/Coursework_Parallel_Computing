@@ -1,0 +1,35 @@
+@startuml
+title Deployment - Parallel Search Web UI (implemented)
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+node "Browser" as Browser {
+  component "Parallel Search UI\nHTML/CSS/ES modules" as UI
+}
+node "Static HTTP server\n(frontend/)" as Static {
+  artifact "index.html" as Html
+  artifact "styles.css" as Css
+  artifact "src/app.js + api.js" as Js
+  artifact "config.js" as Config
+}
+node "Spring Boot backend" as Backend {
+  component "REST API" as Rest
+  component "WebSocket /ws/search" as Ws
+  database "Published inverted index" as Index
+}
+node "Ollama" as Ollama
+
+Browser --> Static : GET assets
+Static --> UI
+UI --> Rest : HTTP JSON\n/api/health, index, search, stats
+UI --> Ws : WebSocket JSON\nprogress events
+Rest --> Index
+Ws --> Index
+Rest --> Ollama : llm mode only
+Ws --> Ollama : llm mode only
+note right of Config
+backendUrl is runtime-configured;
+empty value uses same origin.
+?backend=... is a local override.
+end note
+@enduml

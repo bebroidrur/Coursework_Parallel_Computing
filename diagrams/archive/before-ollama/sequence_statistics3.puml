@@ -1,0 +1,27 @@
+@startuml
+title REST indexing and statistics
+actor Client
+participant IndexController
+participant SearchService
+participant DatasetLoader
+participant IndexBuilder
+participant StatsController
+Client -> IndexController: POST /api/index {threads: N}
+IndexController -> SearchService: index(request)
+SearchService -> SearchService: validate N (1..64); serialize rebuilds
+SearchService -> DatasetLoader: load(configured path)
+DatasetLoader --> SearchService: immutable documents
+SearchService -> IndexBuilder: buildParallel(documents, N)
+alt success
+ IndexBuilder --> SearchService: completed BuildSnapshot
+ SearchService -> SearchService: publish State(build, documents, uniqueTerms)
+ SearchService --> Client: 200 StatsResponse
+else failure
+ SearchService --> Client: 500 dataset error / 503 build error
+ note right of SearchService: Previous State remains available
+end
+Client -> StatsController: GET /api/stats
+StatsController -> SearchService: stats()
+SearchService -> SearchService: capture one State
+SearchService --> Client: 200 StatsResponse
+@enduml

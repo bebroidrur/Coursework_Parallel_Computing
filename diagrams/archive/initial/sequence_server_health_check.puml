@@ -1,0 +1,45 @@
+@startuml
+title Sequence Diagram - Server Health Check
+
+autonumber
+skinparam shadowing false
+
+actor Administrator
+participant "Web UI / CLI" as Client
+participant "REST API" as API
+participant "SearchController" as Controller
+participant "OllamaClient" as Ollama
+participant "Ollama Service" as LLM
+
+Administrator -> Client: Check server health
+Client -> API: GET /api/health
+activate API
+
+API -> Controller: health()
+activate Controller
+
+Controller -> Ollama: isAvailable()
+activate Ollama
+
+Ollama -> LLM: Check service availability
+activate LLM
+
+alt Ollama available
+    LLM --> Ollama: Available
+    Ollama --> Controller: true
+else Ollama unavailable
+    LLM --> Ollama: Connection error
+    Ollama --> Controller: false
+end
+
+deactivate LLM
+deactivate Ollama
+
+Controller --> API: {status: "ok", ollama: true/false}
+deactivate Controller
+
+API --> Client: HTTP 200 + JSON
+deactivate API
+
+Client --> Administrator: Display server status
+@enduml

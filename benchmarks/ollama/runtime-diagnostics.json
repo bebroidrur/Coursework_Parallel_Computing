@@ -1,0 +1,34 @@
+[
+  {
+    "command": [
+      "docker",
+      "inspect",
+      "ollama",
+      "--format",
+      "Memory={{.HostConfig.Memory}} NanoCpus={{.HostConfig.NanoCpus}} Status={{.State.Status}}"
+    ],
+    "error": "8s diagnostic timeout"
+  },
+  {
+    "command": [
+      "docker",
+      "logs",
+      "--tail",
+      "20",
+      "ollama"
+    ],
+    "error": "8s diagnostic timeout"
+  },
+  {
+    "command": [
+      "curl",
+      "--max-time",
+      "3",
+      "-sS",
+      "http://127.0.0.1:11434/api/ps"
+    ],
+    "output": "",
+    "error": "curl: (28) Operation timed out after 3005 milliseconds with 0 bytes received\n",
+    "code": 28
+  }
+]

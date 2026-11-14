@@ -1,0 +1,82 @@
+@startuml
+title Sequence Diagram - System Statistics and Thread Configuration
+
+autonumber
+skinparam shadowing false
+
+actor Administrator
+participant "Web UI / CLI" as Client
+participant "REST API" as API
+participant "SearchController" as Controller
+participant "IndexBuilder" as Builder
+participant "ThreadPool" as Pool
+participant "InvertedIndex" as Index
+participant "StatisticsService" as Stats
+
+== Configure Thread Count ==
+
+Administrator -> Client: Select thread count (N)
+Client -> API: POST /api/index {"threads": N}
+activate API
+
+API -> Controller: buildIndex(N)
+activate Controller
+
+Controller -> Builder: buildIndex(N)
+activate Builder
+
+Builder -> Pool: createPool(N)
+activate Pool
+Pool --> Builder: Pool ready
+deactivate Pool
+
+Builder -> Builder: Start parallel indexing
+
+note right of Builder
+Documents are processed
+by N worker threads.
+end note
+
+Builder --> Controller: Indexing completed
+deactivate Builder
+
+Controller --> API: Indexing result
+deactivate Controller
+
+API --> Client: JSON {status, time_ms}
+deactivate API
+
+Client --> Administrator: Display build time
+
+== View System Statistics ==
+
+Administrator -> Client: Request statistics
+Client -> API: GET /api/stats
+activate API
+
+API -> Controller: stats()
+activate Controller
+
+Controller -> Stats: collectStatistics()
+activate Stats
+
+Stats -> Index: getDocumentCount()
+Index --> Stats: Document count
+
+Stats -> Builder: getLastBuildTime()
+Builder --> Stats: Build time
+
+Stats -> Builder: getThreadCount()
+Builder --> Stats: Threads used
+
+Stats --> Controller: Statistics data
+deactivate Stats
+
+Controller --> API: JSON statistics
+deactivate Controller
+
+API --> Client: {documents, index_build_time_ms, threads_used}
+deactivate API
+
+Client --> Administrator: Display statistics
+@enduml

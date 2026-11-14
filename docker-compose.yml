@@ -1,0 +1,68 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
+
+  ollama-model:
+    image: ollama/ollama:latest
+    entrypoint: ["/bin/sh", "-c"]
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:1b}
+    volumes:
+      - ollama_models:/root/.ollama
+    depends_on:
+      ollama:
+        condition: service_healthy
+    command: ["ollama pull \"$${OLLAMA_MODEL}\""]
+    restart: "no"
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      DATASET_PATH: /app/datasets/sample
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:1b}
+      OLLAMA_CONNECT_TIMEOUT: ${OLLAMA_CONNECT_TIMEOUT:-2s}
+      OLLAMA_GENERATION_TIMEOUT: ${OLLAMA_GENERATION_TIMEOUT:-30s}
+      OLLAMA_HEALTH_TIMEOUT: ${OLLAMA_HEALTH_TIMEOUT:-1s}
+      FRONTEND_ALLOWED_ORIGINS: http://localhost:4173,http://127.0.0.1:4173
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    volumes:
+      - ./datasets:/app/datasets:ro
+    depends_on:
+      ollama-model:
+        condition: service_completed_successfully
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-4173}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  ollama_models:

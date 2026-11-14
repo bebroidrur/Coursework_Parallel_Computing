@@ -1,0 +1,11 @@
+@startuml
+title Implemented health endpoint
+actor Client
+participant HealthController
+Client -> HealthController: GET /api/health
+HealthController --> Client: 200 {status: "ok", ollama: false}
+note right of HealthController
+Ollama integration not implemented.
+No network availability check yet.
+end note
+@enduml

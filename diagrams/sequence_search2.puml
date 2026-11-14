@@ -1,52 +1,36 @@
 @startuml
-title Sequence Diagram - Document Search with Ollama
-
-autonumber
-
-actor User
-participant "Web UI / CLI" as Client
-participant "WebSocketHandler" as WS
-participant "SearchService" as Search
-participant "OllamaClient" as Ollama
-participant "Ollama LLM" as LLM
-participant "InvertedIndex" as Index
-
-User -> Client: Enter search query
-Client -> WS: /ws/search {query}
-activate WS
-
-WS -> Search: search(query)
-activate Search
-
-Search -> Ollama: expandQuery(query)
-activate Ollama
-
-Ollama -> LLM: POST /api/generate
-activate LLM
-LLM --> Ollama: Expanded keywords
-deactivate LLM
-
-Ollama --> Search: Expanded terms
-deactivate Ollama
-
-Search --> WS: Query expansion data
-WS --> Client: stage: query_expansion
-
-loop For each expanded term
-    Search -> Index: search(term)
-    activate Index
-    Index --> Search: Matching documents
-    deactivate Index
+title Implemented REST LLM query expansion
+actor Client
+participant SearchController
+participant SearchService
+participant OllamaService
+participant "Ollama llama3.2:1b" as LLM
+participant InvertedIndex
+Client -> SearchController: POST /api/search {query, mode: llm}
+SearchController -> SearchService: search(request)
+SearchService -> SearchService: validate; stage query_expansion
+SearchService -> OllamaService: expandQuery(query)
+OllamaService -> LLM: POST /api/generate
+model, system, prompt, stream=false, format=json
+alt valid response within deadline
+ LLM --> OllamaService: {done:true, response: JSON string}
+ OllamaService -> OllamaService: validate terms; tokenize; deduplicate; cap additions
+preserve all original terms
+ OllamaService --> SearchService: Expansion(terms, false, null)
+else unavailable / timeout / HTTP error / invalid response
+ OllamaService --> SearchService: Expansion(original terms, true, warning code)
 end
-
-Search -> Search: Merge and rank results
-
-Search --> WS: Ranked search results
-deactivate Search
-
-WS --> Client: stage: keyword_search
-WS --> Client: stage: done
-deactivate WS
-
-Client --> User: Display search results
+SearchService -> SearchService: stage keyword_search; capture completed State
+loop terms
+ SearchService -> InvertedIndex: search(term)
+ InvertedIndex --> SearchService: document IDs
+end
+SearchService -> SearchService: rank and create snippets; stage done
+SearchService --> Client: 200 SearchResponse
+terms, stages, fallback, warning, results
+note right of SearchService
+keyword mode skips Ollama entirely.
+Stages returned in final REST response.
+WebSocket not implemented.
+end note
 @enduml

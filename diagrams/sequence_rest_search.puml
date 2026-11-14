@@ -1,0 +1,19 @@
+@startuml
+title Implemented keyword REST search
+actor Client
+participant SearchController
+participant SearchService
+participant Tokenizer
+participant InvertedIndex
+Client -> SearchController: POST /api/search {query, mode: "keyword"}
+SearchController -> SearchService: search(request)
+SearchService -> SearchService: validate and capture one completed State
+SearchService -> Tokenizer: tokenize(query), deduplicate terms
+loop normalized terms
+ SearchService -> InvertedIndex: search(term)
+ InvertedIndex --> SearchService: document IDs
+end
+SearchService -> SearchService: OR matches, score, snapshot snippets
+sort by score descending, ID ascending
+SearchService --> Client: 200 SearchResponse
+@enduml

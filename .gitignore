@@ -5,3 +5,12 @@ target/
 build/
 .gradle/
 .env
+.env.*
+!.env.example
+node_modules/
+coverage/
+*.log
+tmp/
+
+# Project-local Maven downloads
+.maven-cache/

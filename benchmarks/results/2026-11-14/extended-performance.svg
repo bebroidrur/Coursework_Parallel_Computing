@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+<rect width="100%" height="100%" fill="#fff"/>
+<style>text{font-family:Arial,sans-serif;fill:#172033} .axis{stroke:#9aa5b1} .line{fill:none;stroke-width:3} .legend{font-size:13px}</style>
+<text x="40" y="30" font-size="18" font-weight="bold">Mean build time (ms)</text>
+<line class="axis" x1="40" y1="60" x2="40" y2="640"/><line class="axis" x1="40" y1="640" x2="370" y2="640"/>
+<circle cx="75.0" cy="598.3" r="3" fill="#2563eb"/>
+<circle cx="157.0" cy="618.8" r="3" fill="#2563eb"/>
+<circle cx="239.0" cy="602.6" r="3" fill="#2563eb"/>
+<circle cx="321.0" cy="628.8" r="3" fill="#2563eb"/>
+<polyline class="line" stroke="#2563eb" points="75.0,598.3 157.0,618.8 239.0,602.6 321.0,628.8"/>
+<text x="295" y="78" class="legend" fill="#2563eb">500 docs</text>
+<circle cx="75.0" cy="553.4" r="3" fill="#dc2626"/>
+<circle cx="157.0" cy="594.0" r="3" fill="#dc2626"/>
+<circle cx="239.0" cy="609.0" r="3" fill="#dc2626"/>
+<circle cx="321.0" cy="612.7" r="3" fill="#dc2626"/>
+<polyline class="line" stroke="#dc2626" points="75.0,553.4 157.0,594.0 239.0,609.0 321.0,612.7"/>
+<text x="295" y="95" class="legend" fill="#dc2626">2000 docs</text>
+<circle cx="75.0" cy="409.5" r="3" fill="#059669"/>
+<circle cx="157.0" cy="510.6" r="3" fill="#059669"/>
+<circle cx="239.0" cy="566.3" r="3" fill="#059669"/>
+<circle cx="321.0" cy="577.5" r="3" fill="#059669"/>
+<polyline class="line" stroke="#059669" points="75.0,409.5 157.0,510.6 239.0,566.3 321.0,577.5"/>
+<text x="295" y="112" class="legend" fill="#059669">5000 docs</text>
+<circle cx="75.0" cy="148.9" r="3" fill="#9333ea"/>
+<circle cx="157.0" cy="357.6" r="3" fill="#9333ea"/>
+<circle cx="239.0" cy="491.1" r="3" fill="#9333ea"/>
+<circle cx="321.0" cy="517.1" r="3" fill="#9333ea"/>
+<polyline class="line" stroke="#9333ea" points="75.0,148.9 157.0,357.6 239.0,491.1 321.0,517.1"/>
+<text x="295" y="129" class="legend" fill="#9333ea">10000 docs</text>
+<text x="70" y="662" font-size="11">1</text>
+<text x="152" y="662" font-size="11">2</text>
+<text x="234" y="662" font-size="11">4</text>
+<text x="316" y="662" font-size="11">8</text>
+<text x="180.0" y="685" font-size="12">threads</text>
+<text x="430" y="30" font-size="18" font-weight="bold">Speedup</text>
+<line class="axis" x1="430" y1="60" x2="430" y2="640"/><line class="axis" x1="430" y1="640" x2="760" y2="640"/>
+<circle cx="465.0" cy="508.2" r="3" fill="#2563eb"/>
+<circle cx="547.0" cy="380.3" r="3" fill="#2563eb"/>
+<circle cx="629.0" cy="493.1" r="3" fill="#2563eb"/>
+<circle cx="711.0" cy="148.9" r="3" fill="#2563eb"/>
+<polyline class="line" stroke="#2563eb" points="465.0,508.2 547.0,380.3 629.0,493.1 711.0,148.9"/>
+<text x="685" y="78" class="legend" fill="#2563eb">500 docs</text>
+<circle cx="465.0" cy="512.3" r="3" fill="#dc2626"/>
+<circle cx="547.0" cy="399.5" r="3" fill="#dc2626"/>
+<circle cx="629.0" cy="282.8" r="3" fill="#dc2626"/>
+<circle cx="711.0" cy="235.4" r="3" fill="#dc2626"/>
+<polyline class="line" stroke="#dc2626" points="465.0,512.3 547.0,399.5 629.0,282.8 711.0,235.4"/>
+<text x="685" y="95" class="legend" fill="#dc2626">2000 docs</text>
+<circle cx="465.0" cy="535.2" r="3" fill="#059669"/>
+<circle cx="547.0" cy="453.4" r="3" fill="#059669"/>
+<circle cx="629.0" cy="312.1" r="3" fill="#059669"/>
+<circle cx="711.0" cy="253.6" r="3" fill="#059669"/>
+<polyline class="line" stroke="#059669" points="465.0,535.2 547.0,453.4 629.0,312.1 711.0,253.6"/>
+<text x="685" y="112" class="legend" fill="#059669">5000 docs</text>
+<circle cx="465.0" cy="548.2" r="3" fill="#9333ea"/>
+<circle cx="547.0" cy="480.3" r="3" fill="#9333ea"/>
+<circle cx="629.0" cy="337.1" r="3" fill="#9333ea"/>
+<circle cx="711.0" cy="273.0" r="3" fill="#9333ea"/>
+<polyline class="line" stroke="#9333ea" points="465.0,548.2 547.0,480.3 629.0,337.1 711.0,273.0"/>
+<text x="685" y="129" class="legend" fill="#9333ea">10000 docs</text>
+<text x="460" y="662" font-size="11">1</text>
+<text x="542" y="662" font-size="11">2</text>
+<text x="624" y="662" font-size="11">4</text>
+<text x="706" y="662" font-size="11">8</text>
+<text x="570.0" y="685" font-size="12">threads</text>
+<text x="820" y="30" font-size="18" font-weight="bold">Efficiency</text>
+<line class="axis" x1="820" y1="60" x2="820" y2="640"/><line class="axis" x1="820" y1="640" x2="1150" y2="640"/>
+<circle cx="855.0" cy="148.9" r="3" fill="#2563eb"/>
+<circle cx="937.0" cy="156.1" r="3" fill="#2563eb"/>
+<circle cx="1019.0" cy="503.1" r="3" fill="#2563eb"/>
+<circle cx="1101.0" cy="411.2" r="3" fill="#2563eb"/>
+<polyline class="line" stroke="#2563eb" points="855.0,148.9 937.0,156.1 1019.0,503.1 1101.0,411.2"/>
+<text x="1075" y="78" class="legend" fill="#2563eb">500 docs</text>
+<circle cx="855.0" cy="164.2" r="3" fill="#dc2626"/>
+<circle cx="937.0" cy="191.9" r="3" fill="#dc2626"/>
+<circle cx="1019.0" cy="307.2" r="3" fill="#dc2626"/>
+<circle cx="1101.0" cy="451.5" r="3" fill="#dc2626"/>
+<polyline class="line" stroke="#dc2626" points="855.0,164.2 937.0,191.9 1019.0,307.2 1101.0,451.5"/>
+<text x="1075" y="95" class="legend" fill="#dc2626">2000 docs</text>
+<circle cx="855.0" cy="249.4" r="3" fill="#059669"/>
+<circle cx="937.0" cy="292.3" r="3" fill="#059669"/>
+<circle cx="1019.0" cy="334.5" r="3" fill="#059669"/>
+<circle cx="1101.0" cy="460.0" r="3" fill="#059669"/>
+<polyline class="line" stroke="#059669" points="855.0,249.4 937.0,292.3 1019.0,334.5 1101.0,460.0"/>
+<text x="1075" y="112" class="legend" fill="#059669">5000 docs</text>
+<circle cx="855.0" cy="297.8" r="3" fill="#9333ea"/>
+<circle cx="937.0" cy="342.4" r="3" fill="#9333ea"/>
+<circle cx="1019.0" cy="357.8" r="3" fill="#9333ea"/>
+<circle cx="1101.0" cy="469.0" r="3" fill="#9333ea"/>
+<polyline class="line" stroke="#9333ea" points="855.0,297.8 937.0,342.4 1019.0,357.8 1101.0,469.0"/>
+<text x="1075" y="129" class="legend" fill="#9333ea">10000 docs</text>
+<text x="850" y="662" font-size="11">1</text>
+<text x="932" y="662" font-size="11">2</text>
+<text x="1014" y="662" font-size="11">4</text>
+<text x="1096" y="662" font-size="11">8</text>
+<text x="960.0" y="685" font-size="12">threads</text>
+<text x="40" y="720" class="legend">Each line is a document count; values are means from five measured runs after two warmups. See CSV for exact data.</text>
+</svg>

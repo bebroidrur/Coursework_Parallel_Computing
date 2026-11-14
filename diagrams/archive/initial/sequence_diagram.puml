@@ -1,0 +1,51 @@
+@startuml
+title Sequence Diagram - Parallel Index Building
+
+autonumber
+
+actor Administrator
+participant "REST API" as API
+participant "IndexBuilder" as Builder
+participant "ThreadPool" as Pool
+participant "Worker Threads" as Workers
+participant "InvertedIndex" as Index
+
+Administrator -> API: POST /api/index {"threads": 4}
+activate API
+
+API -> Builder: buildIndex(4)
+activate Builder
+
+Builder -> Pool: createPool(4)
+activate Pool
+
+Builder -> Builder: Load and split documents
+
+loop For each document batch
+    Builder -> Pool: submit(indexTask)
+end
+
+par Worker 1
+    Pool -> Workers: processBatch(1)
+    Workers -> Index: addTerm(term, docId)
+    Index --> Workers: success
+else Worker 2
+    Pool -> Workers: processBatch(2)
+    Workers -> Index: addTerm(term, docId)
+    Index --> Workers: success
+else Worker N
+    Pool -> Workers: processBatch(N)
+    Workers -> Index: addTerm(term, docId)
+    Index --> Workers: success
+end
+
+Pool --> Builder: All tasks completed
+deactivate Pool
+
+Builder -> Builder: Calculate build time
+Builder --> API: Indexing statistics
+deactivate Builder
+
+API --> Administrator: JSON response
+deactivate API
+@enduml

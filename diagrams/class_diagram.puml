@@ -1,104 +1,173 @@
 @startuml
-title Class Diagram - Parallel Search System
-
+title Implemented REST API and concurrent index
 skinparam classAttributeIconSize 0
-skinparam shadowing false
-left to right direction
-
 class Document {
-  - id: String
-  - content: String
-  - path: String
-  + getId(): String
-  + getContent(): String
+ - id: String
+ - content: String
+ - path: String
+ + getId(): String
+ + getContent(): String
+ + getPath(): String
 }
-
+class DatasetLoader {
+ + load(directory: Path): List<Document>
+}
+class Tokenizer {
+ + tokenize(text: String): List<String>
+}
 class InvertedIndex {
-  - buckets: Bucket[]
-  - locks: Lock[]
-  + addTerm(term: String, docId: String): void
-  + search(term: String): Set<String>
-  + getDocumentCount(): int
+ - buckets: Bucket[]
+ - documents: PostingList
+ + registerDocument(docId: String): void
+ + addTerm(term: String, docId: String): void
+ ~ addRegisteredTerm(term: String, docId: String): void
+ + search(term: String): Set<String>
+ + getDocumentCount(): int
+ + getUniqueTermCount(): int
 }
-
 class Bucket {
-  - entries: Entry[]
-  + insert(term: String, docId: String): void
-  + find(term: String): Set<String>
+ - entries: List<TermEntry>
+ + insert(term: String, docId: String): void
+ + find(term: String): Set<String>
 }
-
-class ThreadPool {
-  - workers: Worker[]
-  - taskQueue: TaskQueue
-  + submit(task: Task): void
-  + shutdown(): void
+note right of Bucket
+insert and find synchronized
+on this bucket's monitor
+end note
+class TermEntry {
+ - term: String
+ - postings: PostingList
 }
-
+class PostingList {
+ - documentIds: List<String>
+ + add(documentId: String): void
+ + getDocumentIds(): List<String>
+ + size(): int
+}
 class IndexBuilder {
-  - index: InvertedIndex
-  - threadPool: ThreadPool
-  + build(documents: List<Document>): void
-  + setThreadCount(count: int): void
-  + getLastBuildTime(): long
-  + getThreadCount(): int
+ - snapshot: volatile BuildSnapshot
+ - tokenize: Function
+ + build(documents: List<Document>): void
+ + buildParallel(documents: List<Document>, threads: int): void
+ + getSnapshot(): BuildSnapshot
+ + getIndex(): InvertedIndex
+ + getLastBuildTime(): long
+ + getLastBuildTimeMillis(): double
+ + getThreadCount(): int
 }
-
-class SearchService {
-  - index: InvertedIndex
-  - ollamaClient: OllamaClient
-  + search(query: String): SearchResult[]
+note left of IndexBuilder
+build methods synchronized
+N fixed-pool workers; strided partitions
+old snapshot survives failed builds
+end note
+class BuildSnapshot <<record>> {
+ + index: InvertedIndex
+ + elapsedNanos: long
+ + threads: int
+ + elapsedMillis(): double
 }
-
-class OllamaClient {
-  - baseUrl: String
-  + expandQuery(query: String): String[]
-  + isAvailable(): boolean
+interface ExecutorService
+class ExecutorCompletionService
+class CustomThreadPool {
+ + execute(command): void
+ + submit(task): Future
+ + shutdown(): void
+ + shutdownNow(): List<Runnable>
+ + awaitTermination(timeout, unit): boolean
 }
-
-class SearchController {
-  - searchService: SearchService
-  - indexBuilder: IndexBuilder
-  - statisticsService: StatisticsService
-  + health(): JSON
-  + buildIndex(threads: int): JSON
-  + search(query: String): JSON
-  + stats(): JSON
-}
-
-class WebSocketHandler {
-  - searchService: SearchService
-  + handleSearch(query: String): void
-  + sendStage(stage: String, data: JSON): void
-}
-
-class SearchResult {
-  - documentId: String
-  - score: double
-  - snippet: String
-}
-
-class StatisticsService {
-  - index: InvertedIndex
-  - indexBuilder: IndexBuilder
-  + collectStatistics(): JSON
-}
-
-InvertedIndex *-- Bucket
-
-IndexBuilder --> InvertedIndex
-IndexBuilder --> ThreadPool
+class IndexBuildException
+DatasetLoader --> Document
 IndexBuilder --> Document
-
-SearchService --> InvertedIndex
-SearchService --> OllamaClient
-SearchService --> SearchResult
-
+IndexBuilder --> Tokenizer
+IndexBuilder --> CustomThreadPool
+IndexBuilder --> ExecutorCompletionService
+IndexBuilder --> IndexBuildException
+IndexBuilder *-- BuildSnapshot
+BuildSnapshot --> InvertedIndex
+InvertedIndex *-- Bucket
+InvertedIndex *-- PostingList : document registry (separate monitor)
+Bucket *-- TermEntry
+TermEntry *-- PostingList
+class HealthController {
+ + health(): HealthResponse
+}
+class IndexController {
+ + index(request: IndexRequest): StatsResponse
+}
+class SearchController {
+ + search(request: SearchRequest): SearchResponse
+}
+class StatsController {
+ + stats(): StatsResponse
+}
+class SearchService {
+ - state: volatile State
+ - builder: IndexBuilder
+ + index(request: IndexRequest): StatsResponse
+ + search(request: SearchRequest): SearchResponse
+ + stats(): StatsResponse
+}
+class SearchWebSocketHandler {
+ - searchService: SearchService
+ - executor: ExecutorService
+ - sessions: Map<String, Set<Future>>
+ + handleTextMessage(session, message): void
+ + afterConnectionClosed(session, status): void
+}
+interface SearchProgressListener {
+ + queryExpansion(terms, fallback, warning): void
+ + keywordSearch(resultCount): void
+ + done(response): void
+ + error(error): void
+}
+class WebSocketConfig {
+ + registerWebSocketHandlers(registry): void
+}
+class State <<record>> {
+ + build: BuildSnapshot
+ + documents: List<Document>
+ + uniqueTerms: int
+}
+class ApiExceptionHandler
+IndexController --> SearchService
 SearchController --> SearchService
-SearchController --> IndexBuilder
-SearchController --> StatisticsService
-
-WebSocketHandler --> SearchService
-
-StatisticsService --> InvertedIndex
-StatisticsService --> IndexBuilder
+StatsController --> SearchService
+SearchService *-- IndexBuilder
+SearchService *-- State
+SearchService --> DatasetLoader
+SearchService --> Tokenizer
+State --> BuildSnapshot
+State --> Document
+note right of SearchService
+index() serialized; search/stats capture one State
+publish only after successful build
+keyword OR; score = distinct matched terms
+end note
+class OllamaService {
+ + expandQuery(query: String): Expansion
+ + isAvailable(): boolean
+}
+class Settings <<record>> {
+ baseUrl: String
+ model: String
+ connectTimeout: Duration
+ generationTimeout: Duration
+ healthTimeout: Duration
+ maxTerms: int
+}
+class Expansion <<record>> {
+ terms: List<String>
+ fallback: boolean
+ warning: String
+}
+SearchService --> OllamaService : mode llm only
+SearchWebSocketHandler --> SearchService
+SearchService --> SearchProgressListener
+WebSocketConfig --> SearchWebSocketHandler
+HealthController --> OllamaService : bounded GET /api/tags
+OllamaService *-- Settings
+OllamaService --> Expansion
+OllamaService --> Tokenizer
+OllamaService --> "Java HttpClient" : POST /api/generate
+stream=false, format=json
 @enduml

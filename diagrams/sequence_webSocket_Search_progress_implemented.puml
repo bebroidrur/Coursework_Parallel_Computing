@@ -1,0 +1,33 @@
+@startuml
+title Implemented WebSocket search progress
+actor Client
+participant "WebSocket /ws/search" as WS
+participant "ExecutorService" as Pool
+participant SearchService as Search
+participant OllamaService as Ollama
+participant InvertedIndex as Index
+
+Client -> WS: connect
+Client -> WS: {requestId, query, mode}
+WS --> Client: started
+WS -> Pool: submit search task
+Pool -> Search: search(request, listener)
+alt mode = llm
+ Search -> Ollama: expandQuery(query)
+ Ollama --> Search: terms / fallback warning
+ Search --> WS: query_expansion
+ WS --> Client: query_expansion
+end
+Search -> Index: search each term
+Index --> Search: document IDs
+Search --> WS: keyword_search
+WS --> Client: keyword_search
+Search --> WS: done(SearchResponse)
+WS --> Client: done
+note right of WS
+Every event has requestId,
+stage and timestamp.
+Each connection has an isolated
+set of cancellable tasks.
+end note
+@enduml

@@ -1,0 +1,83 @@
+@startuml
+title Implemented index: sequential and parallel construction
+skinparam classAttributeIconSize 0
+class Document {
+ - id: String
+ - content: String
+ - path: String
+ + getId(): String
+ + getContent(): String
+ + getPath(): String
+}
+class DatasetLoader {
+ + load(directory: Path): List<Document>
+}
+class Tokenizer {
+ + tokenize(text: String): List<String>
+}
+class InvertedIndex {
+ - buckets: Bucket[]
+ - documents: PostingList
+ + registerDocument(docId: String): void
+ + addTerm(term: String, docId: String): void
+ ~ addRegisteredTerm(term: String, docId: String): void
+ + search(term: String): Set<String>
+ + getDocumentCount(): int
+}
+class Bucket {
+ - entries: List<TermEntry>
+ + insert(term: String, docId: String): void
+ + find(term: String): Set<String>
+}
+note right of Bucket
+insert and find synchronized
+on this bucket's monitor
+end note
+class TermEntry {
+ - term: String
+ - postings: PostingList
+}
+class PostingList {
+ - documentIds: List<String>
+ + add(documentId: String): void
+ + getDocumentIds(): List<String>
+ + size(): int
+}
+class IndexBuilder {
+ - snapshot: volatile BuildSnapshot
+ - tokenize: Function
+ + build(documents: List<Document>): void
+ + buildParallel(documents: List<Document>, threads: int): void
+ + getSnapshot(): BuildSnapshot
+ + getIndex(): InvertedIndex
+ + getLastBuildTime(): long
+ + getLastBuildTimeMillis(): double
+ + getThreadCount(): int
+}
+note left of IndexBuilder
+build methods synchronized
+N fixed-pool workers; strided partitions
+old snapshot survives failed builds
+end note
+class BuildSnapshot <<record>> {
+ + index: InvertedIndex
+ + elapsedNanos: long
+ + threads: int
+ + elapsedMillis(): double
+}
+interface ExecutorService
+class ExecutorCompletionService
+class IndexBuildException
+DatasetLoader --> Document
+IndexBuilder --> Document
+IndexBuilder --> Tokenizer
+IndexBuilder --> ExecutorService
+IndexBuilder --> ExecutorCompletionService
+IndexBuilder --> IndexBuildException
+IndexBuilder *-- BuildSnapshot
+BuildSnapshot --> InvertedIndex
+InvertedIndex *-- Bucket
+InvertedIndex *-- PostingList : document registry (separate monitor)
+Bucket *-- TermEntry
+TermEntry *-- PostingList
+@enduml

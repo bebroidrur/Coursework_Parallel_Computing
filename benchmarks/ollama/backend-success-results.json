@@ -1,0 +1,177 @@
+[
+  {
+    "path": "/api/health",
+    "request": null,
+    "http": 200,
+    "response": {
+      "status": "ok",
+      "ollama": true
+    },
+    "wall_seconds": 1.1841342498082668
+  },
+  {
+    "path": "/api/stats",
+    "request": null,
+    "http": 200,
+    "response": {
+      "status": "ok",
+      "documents": 0,
+      "unique_terms": 0,
+      "index_build_time_ms": 0.0,
+      "threads_used": 1
+    },
+    "wall_seconds": 0.007769457995891571
+  },
+  {
+    "path": "/api/search",
+    "request": {
+      "query": "java",
+      "mode": "keyword"
+    },
+    "http": 200,
+    "response": {
+      "status": "ok",
+      "query": "java",
+      "mode": "keyword",
+      "terms": [
+        "java"
+      ],
+      "total": 0,
+      "results": [],
+      "stages": [
+        "keyword_search",
+        "done"
+      ],
+      "fallback": false,
+      "warning": null
+    },
+    "wall_seconds": 0.040117291966453195
+  },
+  {
+    "path": "/api/index",
+    "request": {
+      "threads": 4
+    },
+    "http": 200,
+    "response": {
+      "status": "ok",
+      "documents": 4,
+      "unique_terms": 38,
+      "index_build_time_ms": 2.083042,
+      "threads_used": 4
+    },
+    "wall_seconds": 0.012762709055095911
+  },
+  {
+    "path": "/api/search",
+    "request": {
+      "query": "JAVA java",
+      "mode": "keyword"
+    },
+    "http": 200,
+    "response": {
+      "status": "ok",
+      "query": "JAVA java",
+      "mode": "keyword",
+      "terms": [
+        "java"
+      ],
+      "total": 1,
+      "results": [
+        {
+          "document_id": "03-java.txt",
+          "score": 1,
+          "snippet": "Java supports threads and sequential processing. Java applications can search documents.\n"
+        }
+      ],
+      "stages": [
+        "keyword_search",
+        "done"
+      ],
+      "fallback": false,
+      "warning": null
+    },
+    "wall_seconds": 0.0050894999876618385
+  },
+  {
+    "path": "/api/stats",
+    "request": null,
+    "http": 200,
+    "response": {
+      "status": "ok",
+      "documents": 4,
+      "unique_terms": 38,
+      "index_build_time_ms": 2.083042,
+      "threads_used": 4
+    },
+    "wall_seconds": 0.0022425411734730005
+  },
+  {
+    "path": "/api/index",
+    "request": {
+      "threads": 0
+    },
+    "http": 400,
+    "response": {
+      "status": "error",
+      "code": "INVALID_PARAMETER",
+      "message": "threads має бути цілим числом від 1 до 64"
+    },
+    "wall_seconds": 0.00647704117000103
+  },
+  {
+    "path": "/api/index",
+    "request": {
+      "threads": 2
+    },
+    "http": 200,
+    "response": {
+      "status": "ok",
+      "documents": 4,
+      "unique_terms": 38,
+      "index_build_time_ms": 0.629625,
+      "threads_used": 2
+    },
+    "wall_seconds": 0.003888667095452547
+  },
+  {
+    "path": "/api/search",
+    "request": {
+      "query": "java",
+      "mode": "llm"
+    },
+    "http": 200,
+    "response": {
+      "status": "ok",
+      "query": "java",
+      "mode": "llm",
+      "terms": [
+        "java",
+        "programming",
+        "developer",
+        "tutorials",
+        "online",
+        "courses",
+        "coding",
+        "development",
+        "language"
+      ],
+      "total": 1,
+      "results": [
+        {
+          "document_id": "03-java.txt",
+          "score": 1,
+          "snippet": "Java supports threads and sequential processing. Java applications can search documents.\n"
+        }
+      ],
+      "stages": [
+        "query_expansion",
+        "keyword_search",
+        "done"
+      ],
+      "fallback": false,
+      "warning": null
+    },
+    "wall_seconds": 21.775386208901182
+  }
+]

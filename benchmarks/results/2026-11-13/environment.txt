@@ -1,0 +1,11 @@
+java=24
+os=Mac OS X 26.6.1
+arch=aarch64
+processors=8
+maxHeapBytes=2147483648
+documents=2000
+tokensPerDocument=150
+vocabulary=1000
+buckets=1024
+warmups=2
+repeats=5

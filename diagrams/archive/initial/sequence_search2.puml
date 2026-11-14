@@ -1,0 +1,52 @@
+@startuml
+title Sequence Diagram - Document Search with Ollama
+
+autonumber
+
+actor User
+participant "Web UI / CLI" as Client
+participant "WebSocketHandler" as WS
+participant "SearchService" as Search
+participant "OllamaClient" as Ollama
+participant "Ollama LLM" as LLM
+participant "InvertedIndex" as Index
+
+User -> Client: Enter search query
+Client -> WS: /ws/search {query}
+activate WS
+
+WS -> Search: search(query)
+activate Search
+
+Search -> Ollama: expandQuery(query)
+activate Ollama
+
+Ollama -> LLM: POST /api/generate
+activate LLM
+LLM --> Ollama: Expanded keywords
+deactivate LLM
+
+Ollama --> Search: Expanded terms
+deactivate Ollama
+
+Search --> WS: Query expansion data
+WS --> Client: stage: query_expansion
+
+loop For each expanded term
+    Search -> Index: search(term)
+    activate Index
+    Index --> Search: Matching documents
+    deactivate Index
+end
+
+Search -> Search: Merge and rank results
+
+Search --> WS: Ranked search results
+deactivate Search
+
+WS --> Client: stage: keyword_search
+WS --> Client: stage: done
+deactivate WS
+
+Client --> User: Display search results
+@enduml

@@ -1,0 +1,1 @@
+Java supports threads and sequential processing. Java applications can search documents.

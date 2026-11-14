@@ -1,0 +1,6 @@
+.git
+.maven-cache
+**/target
+**/node_modules
+.DS_Store
+benchmarks/ollama

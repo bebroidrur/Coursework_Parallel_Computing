@@ -1,0 +1,49 @@
+@startuml
+title Deployment Diagram - Parallel Search System
+
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+node "Client Device" {
+  artifact "Web Browser" as Browser
+  artifact "CLI Application" as CLI
+}
+
+node "Docker Host" {
+
+  node "Docker Compose" {
+
+    node "Search Server Container" {
+      component "Java Backend" as Backend
+      component "REST API" as REST
+      component "WebSocket Server" as WS
+      component "Thread Pool" as Pool
+      database "Inverted Index\n(In Memory)" as Index
+    }
+
+    node "Ollama Container" {
+      component "Ollama Service" as Ollama
+      artifact "Local LLM Model" as Model
+    }
+
+  }
+
+  folder "Text Dataset" as Dataset
+}
+
+Browser --> REST : HTTP / JSON
+CLI --> REST : HTTP / JSON
+Browser --> WS : WebSocket
+CLI --> WS : WebSocket
+
+REST --> Backend
+WS --> Backend
+
+Backend --> Pool : Parallel indexing
+Pool --> Index : Thread-safe updates
+Backend --> Index : Keyword search
+Backend --> Ollama : HTTP /api/generate
+Ollama --> Model : Inference
+
+Dataset --> Backend : Read documents
+@enduml
