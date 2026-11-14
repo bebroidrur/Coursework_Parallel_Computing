@@ -84,6 +84,19 @@ public final class IndexBuilder {
                 }
             } catch (InterruptedException e) {
                 pool.shutdownNow();
+                // Do not return to the caller until interrupted workers have
+                // actually stopped. This keeps the snapshot transaction
+                // atomic and prevents daemon workers from touching `next`
+                // after the failed build has returned.
+                try {
+                    if (!pool.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS)) {
+                        throw new IndexBuildException("Index worker pool did not terminate after interruption", new TimeoutException());
+                    }
+                } catch (InterruptedException stopping) {
+                    pool.shutdownNow();
+                    Thread.currentThread().interrupt();
+                    throw new IndexBuildException("Index build interrupted while stopping workers", stopping);
+                }
                 Thread.currentThread().interrupt();
                 throw new IndexBuildException("Index build interrupted", e);
             } catch (ExecutionException e) {

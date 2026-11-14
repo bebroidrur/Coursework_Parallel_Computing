@@ -4,11 +4,11 @@
 
 ## Git-відтворюваність
 
-Поточна гілка — `main`; `HEAD` і `origin/main` вказують на `290d3cf`. Remote `origin` налаштований на `https://github.com/bebroidrur/Coursework_Parallel_Computing.git`. Робоче дерево має незакомічені зміни: backend, frontend, CLI, datasets, docs, benchmarks, Docker-файли та частина UML є untracked, а README і наявні UML змінені.
+Поточна гілка — `main`; опублікований коміт `5bce8ca` синхронізований з `origin/main`. Remote `origin` налаштований на `https://github.com/bebroidrur/Coursework_Parallel_Computing.git`. Після публікації додано окремий незакомічений throughput benchmark пошуку та його результати; він очікує окремого перегляду й коміту.
 
-Тимчасовий клон саме з `HEAD` (без копіювання робочої директорії) не містив `backend/`, `frontend/`, `cli/`, `datasets/`, `docs/`, `benchmarks/`, `docker-compose.yml` або Dockerfile. У ньому `docker compose config` повернув `no configuration file provided: not found`. Отже, поточна робоча директорія функціональна, але GitHub-версія не відтворює її до додавання цих файлів у коміт.
+Тимчасовий клон із попереднього аудиту з коміту до публікації не містив реалізаційних файлів; після коміту `5bce8ca` чистий клон `origin/main` містить backend, frontend, CLI, datasets, docs, benchmarks і Docker-конфігурацію. У ньому `docker compose config` і повний compose smoke завершилися успішно.
 
-`.gitignore` правильно виключає `target/`, `.maven-cache/`, `.env`, IDE-файли та build-каталоги. Перевірка не виявила файлів понад 10 MB поза цими виключеннями, а потрібні вихідні файли не ігноруються. Перед публікацією потрібно додати реалізаційні каталоги та `.dockerignore`, перевірити staged-список і лише потім створити коміт вручну.
+`.gitignore` правильно виключає `target/`, `.maven-cache/`, `.env`, `node_modules/`, IDE-файли, build-каталоги, coverage, логи та Python cache. Перевірка не виявила файлів понад 10 MB поза службовими виключеннями, а потрібні вихідні файли не ігноруються.
 
 ## Обсяг і структура
 
@@ -56,6 +56,8 @@ Backend-тести охоплюють REST, WebSocket, Ollama mock, DatasetPathR
 | 10 000 | 501.394 | 493.794 / 1.015× | 283.961 / 1.766× | 149.715 / 3.349× | 123.566 / 4.058× |
 
 Значення залежать від навантаження системи; efficiency для 8 потоків падає через накладні витрати й конкуренцію за ресурси. Це фактичний один запуск, а не гарантія для іншого обладнання.
+
+Окремий HTTP throughput benchmark keyword-пошуку збережено в [search-throughput](../benchmarks/results/2026-11-14/search-throughput). Він охоплює 1/2/4/8/16 concurrent clients, 100 warmup-запитів, 5 повторів і 100 запитів на клієнта. Усі 15 500 запитів були успішними та коректними; середній throughput становив 627.83, 1083.65, 1837.56, 2261.22 і 2359.27 req/s відповідно для 1, 2, 4, 8 і 16 клієнтів.
 
 ## Документація і регресії
 

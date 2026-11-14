@@ -1,0 +1,11 @@
+endpoint=http://127.0.0.1:18081
+mode=keyword
+index_build_threads=4
+queries=java,threads,індекс,пошук,відсутній
+clients=1,2,4,8,16
+repeats=5
+requestsPerClient=100
+warmupRequests=100
+throughput=total requests divided by wall-clock duration of each concurrent round
+correctness=expected document IDs and total for every response
+python=3.13.0 (v3.13.0:60403a5409f, Oct  7 2024, 00:37:40) [Clang 15.0.0 (clang-1500.3.9.4)]

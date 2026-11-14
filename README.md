@@ -6,7 +6,7 @@
 
 Реалізовано Spring Boot каркас, `GET /api/health` із реальною перевіркою Ollama, UTF-8 завантажувач документів, Unicode-токенізацію, власний інвертований індекс на масиві buckets і списках та послідовну й паралельну побудову індексу. Пошук у Java API виконується за одним нормалізованим терміном.
 
-REST індексації, keyword-пошуку та статистики реалізовано. Ollama query expansion, WebSocket-пошук, CLI-клієнт і Web UI реалізовано. Docker Compose ще не реалізований.
+REST індексації, keyword-пошуку та статистики реалізовано. Ollama query expansion, WebSocket-пошук, CLI-клієнт, Web UI та Docker Compose реалізовано.
 
 ## Конфігурація і тести
 
@@ -81,6 +81,28 @@ MAVEN_USER_HOME="$PWD/.maven-cache" backend/mvnw -o \
 ```
 
 Raw вимірювання, summary (mean, median, speedup, efficiency) та SVG-графік збережені в [benchmarks/results/2026-11-14](benchmarks/results/2026-11-14). Сценарій перевіряє еквівалентність послідовного і паралельного індексів на кожному вимірюванні. Для повторного створення SVG використовуйте `python3 benchmarks/plot_extended_benchmark.py`.
+
+### Throughput keyword search
+
+HTTP-сценарій [benchmarks/search_throughput.py](benchmarks/search_throughput.py) вимірює саме `POST /api/search` у режимі `keyword` на одному незмінному попередньо побудованому індексі. Він використовує п'ять однакових запитів, 100 запитів на клієнта, 100 warmup-запитів і 5 незалежних повторів для 1/2/4/8/16 одночасних клієнтів. Throughput обчислюється як загальна кількість запитів, поділена на wall-clock тривалість concurrent round; кожна відповідь додатково перевіряється за очікуваним набором document ID.
+
+Запуск із готовим JAR і автоматичним стартом backend:
+
+```sh
+python3 benchmarks/search_throughput.py --start-server
+```
+
+Raw-запити, repeat summary, агрегований summary та графік збережені в [benchmarks/results/2026-11-14/search-throughput](benchmarks/results/2026-11-14/search-throughput). Фактичний запуск на Java 24 / macOS / sample із 4 документів дав:
+
+| Клієнти | Throughput, req/s | Mean, ms | Median, ms | P95, ms | P99, ms | Успішність / коректність |
+|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 627.83 | 1.592 | 1.569 | 1.981 | 2.509 | 100% / 100% |
+| 2 | 1083.65 | 1.929 | 1.835 | 2.909 | 3.712 | 100% / 100% |
+| 4 | 1837.56 | 2.114 | 1.973 | 3.210 | 5.121 | 100% / 100% |
+| 8 | 2261.22 | 3.237 | 2.977 | 5.434 | 8.537 | 100% / 100% |
+| 16 | 2359.27 | 6.270 | 5.752 | 11.672 | 17.460 | 100% / 100% |
+
+Ці значення характеризують локальний HTTP/CPU запуск на малому sample, а не граничну продуктивність великого корпусу.
 
 ## REST API (реалізовано)
 
