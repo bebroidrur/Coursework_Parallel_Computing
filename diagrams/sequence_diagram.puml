@@ -2,14 +2,14 @@
 title Parallel build: implemented Java API
 actor Caller
 participant IndexBuilder as Builder
-participant "ExecutorService (N threads)" as Pool
+participant "CustomThreadPool (N threads)" as Pool
 participant "Worker tasks" as Workers
 participant "New InvertedIndex" as Index
 participant "Bucket monitor" as Bucket
 Caller -> Builder: buildParallel(documents, N)
 activate Builder
 Builder -> Builder: validate N, copy input, register unique document IDs
-Builder -> Pool: newFixedThreadPool(N)
+Builder -> Pool: new CustomThreadPool(N)
 loop min(N, document count) tasks
  Builder -> Pool: submit strided document partition
 end

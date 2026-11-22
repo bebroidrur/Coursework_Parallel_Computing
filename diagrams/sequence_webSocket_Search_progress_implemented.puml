@@ -2,7 +2,7 @@
 title Implemented WebSocket search progress
 actor Client
 participant "WebSocket /ws/search" as WS
-participant "ExecutorService" as Pool
+participant "Cached WebSocket executor" as Pool
 participant SearchService as Search
 participant OllamaService as Ollama
 participant InvertedIndex as Index

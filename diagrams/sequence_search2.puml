@@ -10,12 +10,10 @@ Client -> SearchController: POST /api/search {query, mode: llm}
 SearchController -> SearchService: search(request)
 SearchService -> SearchService: validate; stage query_expansion
 SearchService -> OllamaService: expandQuery(query)
-OllamaService -> LLM: POST /api/generate
-model, system, prompt, stream=false, format=json
+OllamaService -> LLM: POST /api/generate\nmodel, system, prompt, stream=false, format=json
 alt valid response within deadline
  LLM --> OllamaService: {done:true, response: JSON string}
- OllamaService -> OllamaService: validate terms; tokenize; deduplicate; cap additions
-preserve all original terms
+ OllamaService -> OllamaService: validate terms; tokenize; deduplicate; cap additions\npreserve all original terms
  OllamaService --> SearchService: Expansion(terms, false, null)
 else unavailable / timeout / HTTP error / invalid response
  OllamaService --> SearchService: Expansion(original terms, true, warning code)
@@ -26,11 +24,10 @@ loop terms
  InvertedIndex --> SearchService: document IDs
 end
 SearchService -> SearchService: rank and create snippets; stage done
-SearchService --> Client: 200 SearchResponse
-terms, stages, fallback, warning, results
+SearchService --> Client: 200 SearchResponse\nterms, stages, fallback, warning, results
 note right of SearchService
 keyword mode skips Ollama entirely.
 Stages returned in final REST response.
-WebSocket not implemented.
+WebSocket progress is described in sequence_webSocket_Search_progress_implemented.puml.
 end note
 @enduml

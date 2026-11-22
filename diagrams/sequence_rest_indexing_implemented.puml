@@ -1,0 +1,39 @@
+@startuml
+title Implemented REST index building with CustomThreadPool
+
+actor Client
+participant IndexController
+participant SearchService
+participant DatasetLoader
+participant IndexBuilder
+participant CustomThreadPool
+participant InvertedIndex
+participant Bucket
+
+Client -> IndexController: POST /api/index {threads: N}
+IndexController -> SearchService: index(IndexRequest)
+SearchService -> SearchService: validate 1 <= N <= 64
+SearchService -> DatasetLoader: load(resolved dataset path)
+DatasetLoader --> SearchService: List<Document>
+SearchService -> IndexBuilder: buildParallel(documents, N)
+IndexBuilder -> IndexBuilder: copy input; register unique IDs
+IndexBuilder -> CustomThreadPool: create N workers
+loop worker tasks
+    CustomThreadPool -> IndexBuilder: process strided documents
+    IndexBuilder -> IndexBuilder: tokenize and check interruption
+    IndexBuilder -> InvertedIndex: addRegisteredTerm(term, documentId)
+    InvertedIndex -> Bucket: synchronized update
+end
+IndexBuilder -> CustomThreadPool: await completion
+alt all workers completed
+    IndexBuilder -> IndexBuilder: publish volatile BuildSnapshot
+    IndexBuilder --> SearchService: completed snapshot
+    SearchService -> SearchService: publish State(snapshot, documents, uniqueTerms)
+    SearchService --> IndexController: StatsResponse
+    IndexController --> Client: 200 JSON statistics
+else dataset or worker failure / interruption
+    IndexBuilder -> CustomThreadPool: shutdownNow(); await termination
+    IndexBuilder --> SearchService: IndexBuildException
+    SearchService --> Client: error response; previous state retained
+end
+@enduml

@@ -1,5 +1,5 @@
 @startuml
-caption Target system design; not fully implemented. See diagrams/README.md.
+caption Historical target design; implemented counterpart is sequence_webSocket_Search_progress_implemented.puml.
 title Sequence Diagram - WebSocket Search Progress
 
 autonumber

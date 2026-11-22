@@ -1,0 +1,3 @@
+dataset,documents,bytes,threads,mean_ms,unique_terms,memory_usage_rss_kb,status
+generated-test-2,100,104857600,1,8220.827792,209,,ok
+generated-500m,10000,524290000,1,41163.507597,10117,245253.333333,ok

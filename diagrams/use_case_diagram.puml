@@ -1,5 +1,5 @@
 @startuml
-caption Target system design; not fully implemented. See diagrams/README.md.
+caption Implemented use cases; see diagrams/README.md for sequence coverage.
 title Use Case Diagram - Parallel Search System
 
 left to right direction

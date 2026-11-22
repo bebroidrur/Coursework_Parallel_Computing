@@ -1,7 +1,11 @@
 package com.coursework.backend.index;
 
 import com.coursework.backend.document.Document;
+import com.coursework.backend.document.DocumentRef;
 import com.coursework.backend.text.Tokenizer;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletionService;
@@ -42,6 +46,15 @@ public final class IndexBuilder {
         buildInternal(documents, threads, true);
     }
 
+    /**
+     * Bounded-memory variant: only document references are retained by the
+     * builder and each worker reads one UTF-8 file while indexing it.
+     */
+    public synchronized void buildParallelRefs(List<DocumentRef> references, int threads) {
+        if (threads < 1) throw new IllegalArgumentException("threads must be positive");
+        buildRefsInternal(references, threads);
+    }
+
     private void buildInternal(List<Document> documents, int threads, boolean parallel) {
         long start = System.nanoTime();
         List<Document> input = List.copyOf(documents);
@@ -56,6 +69,24 @@ public final class IndexBuilder {
         }
         if (parallel) runWorkers(input, next, threads);
         else for (Document document : input) indexDocument(document, next);
+        checkInterrupted();
+        snapshot = new BuildSnapshot(next, System.nanoTime() - start, threads);
+    }
+
+    private void buildRefsInternal(List<DocumentRef> references, int threads) {
+        long start = System.nanoTime();
+        List<DocumentRef> input = List.copyOf(references);
+        InvertedIndex next = new InvertedIndex(bucketCount);
+        for (DocumentRef reference : input) {
+            checkInterrupted();
+            int before = next.getDocumentCount();
+            next.registerDocument(reference.getId());
+            if (next.getDocumentCount() == before) {
+                throw new IllegalArgumentException("Duplicate document id: " + reference.getId());
+            }
+        }
+        int tasks = Math.min(threads, input.size());
+        if (tasks > 0) runReferenceWorkers(input, next, threads, tasks);
         checkInterrupted();
         snapshot = new BuildSnapshot(next, System.nanoTime() - start, threads);
     }
@@ -118,9 +149,72 @@ public final class IndexBuilder {
 
     private void indexDocument(Document document, InvertedIndex next) {
         checkInterrupted();
-        for (String term : tokenize.apply(document.getContent())) {
+        indexText(document.getId(), document.getContent(), next);
+    }
+
+    private void indexReference(DocumentRef reference, InvertedIndex next) {
+        checkInterrupted();
+        try {
+            String content = Files.readString(reference.getPath(), StandardCharsets.UTF_8);
+            indexText(reference.getId(), content, next);
+        } catch (IOException e) {
+            throw new IndexBuildException("Unable to read dataset document: " + reference.getId(), e);
+        }
+    }
+
+    private void indexText(String documentId, String content, InvertedIndex next) {
+        for (String term : tokenize.apply(content)) {
             checkInterrupted();
-            next.addRegisteredTerm(term, document.getId());
+            next.addRegisteredTerm(term, documentId);
+        }
+    }
+
+    private void runReferenceWorkers(List<DocumentRef> references, InvertedIndex next, int threads, int tasks) {
+        CustomThreadPool pool = new CustomThreadPool(threads);
+        CompletionService<Void> completed = new java.util.concurrent.ExecutorCompletionService<>(pool);
+        try {
+            try {
+                for (int worker = 0; worker < tasks; worker++) {
+                    final int offset = worker;
+                    completed.submit(() -> {
+                        for (int i = offset; i < references.size(); i += tasks) {
+                            indexReference(references.get(i), next);
+                        }
+                        return null;
+                    });
+                }
+                for (int i = 0; i < tasks; i++) completed.take().get();
+                pool.shutdown();
+                if (!pool.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS)) {
+                    throw new IndexBuildException("Index worker pool did not terminate", new TimeoutException());
+                }
+            } catch (InterruptedException e) {
+                pool.shutdownNow();
+                try {
+                    if (!pool.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS)) {
+                        throw new IndexBuildException("Index worker pool did not terminate after interruption", new TimeoutException());
+                    }
+                } catch (InterruptedException stopping) {
+                    pool.shutdownNow();
+                    Thread.currentThread().interrupt();
+                    throw new IndexBuildException("Index build interrupted while stopping workers", stopping);
+                }
+                Thread.currentThread().interrupt();
+                throw new IndexBuildException("Index build interrupted", e);
+            } catch (ExecutionException e) {
+                pool.shutdownNow();
+                try { pool.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS); }
+                catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    throw new IndexBuildException("Index build interrupted while stopping workers", interrupted);
+                }
+                throw new IndexBuildException("Index worker failed", e.getCause());
+            } finally {
+                if (!pool.isShutdown()) pool.shutdownNow();
+            }
+        } catch (RuntimeException failure) {
+            pool.shutdownNow();
+            throw failure;
         }
     }
     private static void checkInterrupted() {

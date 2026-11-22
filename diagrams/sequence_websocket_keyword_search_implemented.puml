@@ -1,0 +1,31 @@
+@startuml
+title Implemented WebSocket keyword search
+
+actor User
+participant "Web UI / CLI" as Client
+participant "SearchWebSocketHandler" as WS
+participant "cached WebSocket executor" as Pool
+participant SearchService
+participant InvertedIndex
+
+User -> Client: enter query; choose keyword
+Client -> WS: connect /ws/search
+Client -> WS: {requestId, query, mode: "keyword"}
+WS -> Client: started(requestId, timestamp)
+WS -> Pool: submit search task
+Pool -> SearchService: search(SearchRequest, listener)
+SearchService -> SearchService: validate query and capture State
+SearchService -> InvertedIndex: search each normalized term
+InvertedIndex --> SearchService: document ID sets
+SearchService -> SearchService: merge, score and create snippets
+SearchService -> WS: listener.keywordSearch(resultCount)
+WS -> Client: keyword_search(requestId, resultCount)
+SearchService -> WS: listener.done(SearchResponse)
+WS -> Client: done(requestId, REST-compatible results)
+
+note right of SearchService
+Keyword mode skips Ollama and
+query_expansion. Each request has
+its own requestId and asynchronous task.
+end note
+@enduml

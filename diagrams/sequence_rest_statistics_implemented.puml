@@ -1,0 +1,27 @@
+@startuml
+title Implemented REST system statistics
+
+actor Client
+participant StatsController
+participant SearchService
+participant "volatile State" as State
+participant BuildSnapshot
+participant InvertedIndex
+
+Client -> StatsController: GET /api/stats
+StatsController -> SearchService: stats()
+SearchService -> State: capture current completed state
+State --> SearchService: BuildSnapshot + uniqueTerms
+SearchService -> BuildSnapshot: index(), elapsedMillis(), threads()
+SearchService -> InvertedIndex: getDocumentCount()
+InvertedIndex --> SearchService: document count
+SearchService --> StatsController: StatsResponse
+StatsController --> Client: 200 JSON (status, documents, unique_terms, index_build_time_ms, threads_used)
+
+note right of State
+The state is published only after
+a complete index build. Searches
+may continue using the previous state
+during a rebuild.
+end note
+@enduml

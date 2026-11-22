@@ -16,3 +16,9 @@ __pycache__/
 
 # Project-local Maven downloads
 .maven-cache/
+
+# Generated benchmark datasets
+/datasets/generated-2g/
+/datasets/generated-500m/
+/datasets/generated-test/
+/datasets/generated-test-2/

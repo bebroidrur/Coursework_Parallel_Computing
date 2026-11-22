@@ -82,6 +82,12 @@ MAVEN_USER_HOME="$PWD/.maven-cache" backend/mvnw -o \
 
 Raw вимірювання, summary (mean, median, speedup, efficiency) та SVG-графік збережені в [benchmarks/results/2026-11-14](benchmarks/results/2026-11-14). Сценарій перевіряє еквівалентність послідовного і паралельного індексів на кожному вимірюванні. Для повторного створення SVG використовуйте `python3 benchmarks/plot_extended_benchmark.py`.
 
+Для окремої перевірки вимоги великого датасету використовуйте opt-in генератор [benchmarks/generate_corpus.py](benchmarks/generate_corpus.py). Він створює 10 000 тематичних UTF-8 `.txt` документів розміром 100M, 500M, 1G або 2G лише після явного запуску; оцінка обмежень пам’яті та команди перевірки описані в [docs/dataset-scale.md](docs/dataset-scale.md). Корпус 2G не вважається підтверджено проіндексованим без фактичного запуску й вимірювання heap.
+
+Фактичний експеримент для 500 MiB із 1/2/4/8 потоками, сирі CSV, summary, PNG-графіки та висновки збережені в [benchmarks/coursework-results](benchmarks/coursework-results/report.md).
+
+Під час REST-індексації backend використовує `DatasetLoader.loadRefs` і `IndexBuilder.buildParallelRefs`: у пам’яті залишаються шляхи документів, а UTF-8 вміст читається окремим worker-ом по одному файлу. `Document`/`load` з повним текстом збережені для сумісності малих корпусів і тестів; покрокова перевірка RAM описана в [docs/dataset-scale.md](docs/dataset-scale.md).
+
 ### Throughput keyword search
 
 HTTP-сценарій [benchmarks/search_throughput.py](benchmarks/search_throughput.py) вимірює саме `POST /api/search` у режимі `keyword` на одному незмінному попередньо побудованому індексі. Він використовує п'ять однакових запитів, 100 запитів на клієнта, 100 warmup-запитів і 5 незалежних повторів для 1/2/4/8/16 одночасних клієнтів. Throughput обчислюється як загальна кількість запитів, поділена на wall-clock тривалість concurrent round; кожна відповідь додатково перевіряється за очікуваним набором document ID.
@@ -116,7 +122,7 @@ java -Djava.io.tmpdir="$PWD/backend/target" -jar backend/target/backend-0.0.1-SN
 
 Усі відповіді — JSON із `status`: `ok` або `error`. Для POST потрібен `Content-Type: application/json`. Нижче час і кількість термінів у прикладах статистики ілюстративні: залежать від датасету й запуску.
 
-Окремий frontend на `http://localhost:4173` за замовчуванням звертається до `http://localhost:8080`. Іншу адресу можна задати через `frontend/config.js` (`window.APP_CONFIG.backendUrl`) або query-параметр `?backend=http://host:port`; query-параметр має пріоритет. Backend дозволяє локальні origins `http://localhost:4173` і `http://127.0.0.1:4173`; список можна змінити через `FRONTEND_ALLOWED_ORIGINS`.
+Окремий frontend на `http://localhost:4173` за замовчуванням звертається до локального backend `http://localhost:18080`. Іншу адресу можна задати через `frontend/config.js` (`window.APP_CONFIG.backendUrl`) або query-параметр `?backend=http://host:port`; query-параметр має пріоритет. Для Docker Compose використовується same-origin proxy. Backend дозволяє локальні origins `http://localhost:4173` і `http://127.0.0.1:4173`; список можна змінити через `FRONTEND_ALLOWED_ORIGINS`.
 
 ### GET /api/health
 

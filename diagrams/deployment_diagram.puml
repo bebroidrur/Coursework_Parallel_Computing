@@ -1,5 +1,5 @@
 @startuml
-caption Implemented backend, CLI and static Web UI; Docker Compose remains future work. See diagrams/README.md.
+caption Implemented backend, CLI, static Web UI and Docker Compose. See diagrams/README.md.
 title Deployment Diagram - Parallel Search System
 
 skinparam shadowing false

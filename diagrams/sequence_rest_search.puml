@@ -14,6 +14,6 @@ loop normalized terms
  InvertedIndex --> SearchService: document IDs
 end
 SearchService -> SearchService: OR matches, score, snapshot snippets
-sort by score descending, ID ascending
+SearchService -> SearchService: sort by score descending, ID ascending
 SearchService --> Client: 200 SearchResponse
 @enduml

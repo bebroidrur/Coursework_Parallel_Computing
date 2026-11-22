@@ -168,6 +168,5 @@ HealthController --> OllamaService : bounded GET /api/tags
 OllamaService *-- Settings
 OllamaService --> Expansion
 OllamaService --> Tokenizer
-OllamaService --> "Java HttpClient" : POST /api/generate
-stream=false, format=json
+OllamaService --> "Java HttpClient" : POST /api/generate\nstream=false, format=json
 @enduml
